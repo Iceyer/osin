@@ -11,6 +11,12 @@ type Client interface {
 	// Base client uri
 	GetRedirectUri() string
 
+	// Client Scope List
+	GetAllowedScope() string
+
+	// Client Grant List
+	GetAllowedAccessType() AllowedAccessType
+
 	// Data to be passed to storage. Not used by the library.
 	GetUserData() interface{}
 }
@@ -57,4 +63,12 @@ func (d *DefaultClient) CopyFrom(client Client) {
 	d.Secret = client.GetSecret()
 	d.RedirectUri = client.GetRedirectUri()
 	d.UserData = client.GetUserData()
+}
+
+func (d *DefaultClient) GetAllowedScope() string {
+	return ""
+}
+
+func (d *DefaultClient) GetAllowedAccessType() AllowedAccessType {
+	return AllowedAccessType{}
 }
