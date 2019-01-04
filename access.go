@@ -295,7 +295,7 @@ func (s *Server) handleRefreshTokenRequest(w *Response, r *http.Request) *Access
 		Type:            REFRESH_TOKEN,
 		Code:            r.FormValue("refresh_token"),
 		Scope:           r.FormValue("scope"),
-		GenerateRefresh: true,
+		GenerateRefresh: !s.Config.RetainTokenAfterRefresh,
 		Expiration:      s.Config.AccessExpiration,
 		HttpRequest:     r,
 	}
