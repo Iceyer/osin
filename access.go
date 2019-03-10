@@ -209,17 +209,30 @@ func (s *Server) handleAuthorizationCodeRequest(w *Response, r *http.Request) *A
 	}
 
 	// check redirect uri
-	if ret.RedirectUri == "" {
-		ret.RedirectUri = FirstUri(ret.Client.GetRedirectUri(), s.Config.RedirectUriSeparator)
-	}
-	if realRedirectUri, err := ValidateUriList(ret.Client.GetRedirectUri(), ret.RedirectUri, s.Config.RedirectUriSeparator); err != nil {
-		s.setErrorAndLog(w, E_INVALID_REQUEST, err, "auth_code_request=%s", "error validating client redirect")
+	if len(ret.AuthorizeData.RedirectUri) == 0 {
+		s.setErrorAndLog(w, E_INVALID_REQUEST,
+			errors.New("Redirect uri is different, authorize empty"),
+			"auth_code_request=%s", "client redirect does not match authorization data")
 		return nil
-	} else {
-		ret.RedirectUri = realRedirectUri
 	}
-	if ret.AuthorizeData.RedirectUri != ret.RedirectUri {
-		s.setErrorAndLog(w, E_INVALID_REQUEST, errors.New("Redirect uri is different"), "auth_code_request=%s", "client redirect does not match authorization data")
+	if len(ret.RedirectUri) == 0 {
+		ret.RedirectUri = ret.AuthorizeData.RedirectUri
+	} else {
+		if _, err := ValidateUriList(ret.Client.GetRedirectUri(),
+			ret.RedirectUri,
+			s.Config.RedirectUriSeparator); err != nil {
+			s.setErrorAndLog(w, E_INVALID_REQUEST,
+				errors.New("Redirect uri is different, url:  "+ret.RedirectUri),
+				"auth_code_request=%s", "client redirect does not match authorization data")
+			return nil
+		}
+	}
+	if _, err := ValidateUriList(ret.Client.GetRedirectUri(),
+		ret.AuthorizeData.RedirectUri,
+		s.Config.RedirectUriSeparator); err != nil {
+		s.setErrorAndLog(w, E_INVALID_REQUEST,
+			errors.New("Redirect uri is different, authorize: "+ret.AuthorizeData.RedirectUri),
+			"auth_code_request=%s", "client redirect does not match authorization data")
 		return nil
 	}
 
